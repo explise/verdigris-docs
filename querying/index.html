@@ -1,0 +1,1104 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="S3-native log storage & query engine in Rust — the layer your infrastructure leaves behind. A self-hostable log platform that keeps log data in your own cloud account.">
+      
+      
+      
+        <link rel="canonical" href="https://explise.github.io/verdigris-docs/querying/">
+      
+      
+        <link rel="prev" href="../sending-logs/">
+      
+      
+        <link rel="next" href="../cost/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Querying - Verdigris</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#querying" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Verdigris" class="md-header__button md-logo" aria-label="Verdigris" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Verdigris
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Querying
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Verdigris" class="md-nav__button md-logo" aria-label="Verdigris" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Verdigris
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Get started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Get started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install on EKS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sending-logs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sending logs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Verdigris
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Using Verdigris
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-log-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The log schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-search-dsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The search DSL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw SQL
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raw SQL">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-query-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The query API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arrow-vs-json-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arrow vs JSON responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-tail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live tail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-known-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope &amp; known limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cost & tiering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-log-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The log schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-search-dsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The search DSL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw SQL
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raw SQL">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-query-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The query API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arrow-vs-json-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arrow vs JSON responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-tail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live tail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-known-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope &amp; known limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="querying">Querying<a class="headerlink" href="#querying" title="Permanent link">&para;</a></h1>
+<p>Verdigris queries your logs <strong>in place</strong>: DataFusion reads Parquet straight out of object
+storage, registering exactly the files the manifest lists. There is no rehydration step —
+cold logs are always live, and you pay compute only when you actually query.</p>
+<p>The query language is <strong>SQL</strong> (portable, no proprietary DSL to learn), plus a concise search
+DSL for the common case that compiles down to SQL. <code>POST /v1/query</code> accepts either; the
+server auto-detects which.</p>
+<h2 id="the-log-schema">The log schema<a class="headerlink" href="#the-log-schema" title="Permanent link">&para;</a></h2>
+<p>Rows carry these fields:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ts</code></td>
+<td>timestamp</td>
+<td>event time</td>
+</tr>
+<tr>
+<td><code>level</code></td>
+<td>string</td>
+<td><code>ERROR</code> / <code>WARN</code> / <code>INFO</code> / <code>DEBUG</code></td>
+</tr>
+<tr>
+<td><code>service</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>int</td>
+<td>e.g. an HTTP status code</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>string</td>
+<td>the log body</td>
+</tr>
+<tr>
+<td><code>trace_id</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>attrs_json</code></td>
+<td>string</td>
+<td>the schema-evolution escape hatch — extra fields as a JSON blob</td>
+</tr>
+</tbody>
+</table>
+<p><code>attrs_json</code> is a JSON string; the web UI parses it into an <code>attrs</code> object for display.</p>
+<h2 id="the-search-dsl">The search DSL<a class="headerlink" href="#the-search-dsl" title="Permanent link">&para;</a></h2>
+<p>The search bar speaks a concise, familiar query language. The grammar (v1):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>query   := term* ( &#39;|&#39; command )*
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>term    := field &#39;:&#39; value        # service:auth, level:error
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>         | field op value          # status &gt;= 500, status == 200
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>         | word                     # free text → message ILIKE &#39;%word%&#39;
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>op      := == | = | != | &gt;= | &lt;= | &gt; | &lt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>command := last &lt;duration&gt;         # last 1h, last 30m, last 7d  (s/m/h/d)
+</code></pre></div>
+<p>Known columns are <code>ts, level, service, status, message, trace_id</code>. Any <strong>other</strong> key matches
+inside the <code>attrs_json</code> blob (equality only). A few worked examples:</p>
+<table>
+<thead>
+<tr>
+<th>DSL</th>
+<th>Compiles to (roughly)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>service:auth status&gt;=500 \| last 1h</code></td>
+<td><code>service = 'auth' AND status &gt;= 500 AND ts &gt;= …</code></td>
+</tr>
+<tr>
+<td><code>level:error timeout</code></td>
+<td><code>level = 'ERROR' AND message ILIKE '%timeout%'</code></td>
+</tr>
+<tr>
+<td><code>service:api status == 200</code></td>
+<td><code>service = 'api' AND status = 200</code></td>
+</tr>
+<tr>
+<td><code>region:us-east-1</code></td>
+<td><code>attrs_json LIKE '%"region":"us-east-1"%'</code></td>
+</tr>
+</tbody>
+</table>
+<p>Notes on behavior, verified against the translator:</p>
+<ul>
+<li><code>level</code> values are upper-cased (<code>level:error</code> → <code>level = 'ERROR'</code>).</li>
+<li><code>status</code> must be numeric — a non-numeric value is an error (surfaced as a <strong>400</strong>).</li>
+<li>A bare word becomes a free-text <code>message ILIKE '%word%'</code> contains-match.</li>
+<li>Attribute keys support only <code>:</code>/<code>==</code> equality; other operators on an attribute are an error.</li>
+<li>Results default to <code>ORDER BY ts DESC LIMIT 200</code>.</li>
+</ul>
+<h2 id="raw-sql">Raw SQL<a class="headerlink" href="#raw-sql" title="Permanent link">&para;</a></h2>
+<p>Anything starting with <code>SELECT</code> or <code>WITH</code> is treated as raw SQL and passed straight to
+DataFusion — the full SQL surface, not a subset:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">service</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">FILTER</span><span class="w"> </span><span class="p">(</span><span class="k">WHERE</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">errors</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">FROM</span><span class="w"> </span><span class="n">logs</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">service</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">DESC</span>
+</code></pre></div>
+<p>The table name in the query must match the served table (<code>--table</code>, default <code>logs</code>).</p>
+<h3 id="from-the-cli">From the CLI<a class="headerlink" href="#from-the-cli" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>vdg<span class="w"> </span>sql<span class="w"> </span>--table<span class="w"> </span>logs<span class="w"> </span><span class="s2">&quot;SELECT level, count(*) FROM logs GROUP BY level&quot;</span>
+</code></pre></div>
+<p><code>vdg sql</code> also accepts the search DSL (same auto-detection as the HTTP path). It requires a
+build with the <code>datafusion</code> feature.</p>
+<h2 id="the-query-api">The query API<a class="headerlink" href="#the-query-api" title="Permanent link">&para;</a></h2>
+<p><code>POST /v1/query</code> (a <strong>read</strong>-role endpoint) runs the query and returns a page of rows, a
+time histogram, and stats in one envelope.</p>
+<p>Request:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span><span class="w"> </span><span class="nt">&quot;sql&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SELECT * FROM logs LIMIT 200&quot;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>A malformed query returns <strong>400</strong> <code>{ "error": ... }</code> — so the client can tell a broken query
+from a query that simply matched zero rows.</p>
+<p>Response:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;rows&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;ts&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-07-04T12:37:23.403&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;service&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;auth&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">503</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;…&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;trace_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;attrs_json&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{…}&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">&quot;stats&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;events&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">60000</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;scannedBytes&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">787601</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;elapsedMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">             </span><span class="nt">&quot;engine&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;datafusion&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">&quot;histogram&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">807</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;errors&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">331</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="err">…</span><span class="w"> </span><span class="p">]</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>stats.events</code> is the <strong>total matched count</strong> (the histogram sum), not the returned row page.</li>
+<li><code>stats.engine</code> is always <code>datafusion</code>.</li>
+<li><code>histogram</code> is ~60 buckets (total vs error counts) over the table's time range.</li>
+</ul>
+<h2 id="arrow-vs-json-responses">Arrow vs JSON responses<a class="headerlink" href="#arrow-vs-json-responses" title="Permanent link">&para;</a></h2>
+<p>By default the body is the JSON envelope above. Send <code>Accept:
+application/vnd.apache.arrow.stream</code> to get the rows as a columnar <strong>Arrow IPC stream</strong> in
+the body instead, with <code>stats</code> and <code>histogram</code> returned as JSON in the <code>x-verdigris-stats</code>
+and <code>x-verdigris-histogram</code> response headers (still a single round-trip). The web UI
+negotiates Arrow (config <code>wire: "arrow"</code>) and falls back to JSON transparently.</p>
+<div class="admonition note">
+<p class="admonition-title">Arrow wire detail</p>
+<p>On the Arrow wire, <code>ts</code> is a Timestamp column delivered as epoch-ms (the client
+normalizes it to the same ISO string the JSON wire sends). The server also casts
+<code>Utf8View</code>/<code>BinaryView</code> columns down to plain <code>Utf8</code>/<code>Binary</code> so any Arrow decoder can
+read the stream.</p>
+</div>
+<h2 id="live-tail">Live tail<a class="headerlink" href="#live-tail" title="Permanent link">&para;</a></h2>
+<p><code>GET /v1/tail</code> (a read-role endpoint) is a live stream as Server-Sent Events
+(<code>Content-Type: text/event-stream</code>). Each event is <code>data: {json}</code> for one row
+(<code>{ts, level, service, message, trace_id?, status?, attrs_json?}</code>), with keepalive comments
+in between. A fresh connection streams only newly-arriving rows, not the backlog: it starts
+from the current manifest max and polls the newest file each second, bounded per poll so a
+bursty table can't flood the stream. The web UI consumes it via <code>EventSource</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Auth + SSE</p>
+<p><code>EventSource</code> cannot send an <code>Authorization</code> header. If bearer auth (<code>[auth]</code>) is on,
+front the tail with a query-param token or ingress auth.</p>
+</div>
+<h2 id="scope-known-limits">Scope &amp; known limits<a class="headerlink" href="#scope-known-limits" title="Permanent link">&para;</a></h2>
+<p>Grounded in the current implementation, so you know what to expect:</p>
+<ul>
+<li><strong>Text search</strong> over columnar Parquet is <code>ILIKE</code>-based today. Fast "grep this stack trace"
+  search (bloom filters / inverted index) is future work — <code>WHERE level='error'</code> is fast,
+  arbitrary substring search over huge scans is not yet optimized.</li>
+<li><strong>Query-time tier filtering</strong> is not wired: a query currently scans all tiers regardless of
+  the UI's tier pills. Only the <em>cost estimate</em> is tier-aware (see <a href="../cost/">Cost &amp; tiering</a>).</li>
+<li>Estimate/scan pruning is by time window and coarse file min/max stats; finer
+  predicate/row-group pruning is on the roadmap.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../sending-logs/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Sending logs">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Sending logs
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../cost/" class="md-footer__link md-footer__link--next" aria-label="Next: Cost &amp; tiering">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Cost & tiering
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.tracking", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

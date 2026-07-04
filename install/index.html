@@ -1,0 +1,1223 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="S3-native log storage & query engine in Rust — the layer your infrastructure leaves behind. A self-hostable log platform that keeps log data in your own cloud account.">
+      
+      
+      
+        <link rel="canonical" href="https://explise.github.io/verdigris-docs/install/">
+      
+      
+        <link rel="prev" href="../getting-started/">
+      
+      
+        <link rel="next" href="../sending-logs/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Install on EKS - Verdigris</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#install-on-eks-s3" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Verdigris" class="md-header__button md-logo" aria-label="Verdigris" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Verdigris
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Install on EKS
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Verdigris" class="md-nav__button md-logo" aria-label="Verdigris" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Verdigris
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Get started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Get started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install on EKS
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install on EKS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-push-the-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build &amp; push the image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-ingest-query-role-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ingest / query role split
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-zero-config-local-demo-no-aws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install: zero-config local demo (no AWS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-production-on-eks-s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install: production on EKS + S3
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Install: production on EKS + S3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iam-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IAM permissions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minio-or-static-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MinIO or static keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3-lifecycle-policy-auto-applied" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S3 lifecycle policy (auto-applied)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#values-you-actually-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Values you actually set
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ship-real-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ship real logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validate-the-chart-without-a-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate the chart without a cluster
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locking-down-the-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locking down the API
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sending-logs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sending logs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Verdigris
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Using Verdigris
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../querying/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cost & tiering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-push-the-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build &amp; push the image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-ingest-query-role-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ingest / query role split
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-zero-config-local-demo-no-aws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install: zero-config local demo (no AWS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-production-on-eks-s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install: production on EKS + S3
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Install: production on EKS + S3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iam-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IAM permissions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minio-or-static-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MinIO or static keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3-lifecycle-policy-auto-applied" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S3 lifecycle policy (auto-applied)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#values-you-actually-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Values you actually set
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ship-real-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ship real logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validate-the-chart-without-a-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate the chart without a cluster
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locking-down-the-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locking down the API
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="install-on-eks-s3">Install on EKS + S3<a class="headerlink" href="#install-on-eks-s3" title="Permanent link">&para;</a></h1>
+<p>Verdigris ships as a single container image and a Helm chart, so a production install is
+one <code>helm install</code>. Data lands in <strong>your own S3 bucket</strong>; the pods are stateless and scale
+freely. This page is the full production reference — the <a href="../getting-started/">Quickstart</a> is
+the fast path from zero to logs in S3.</p>
+<div class="admonition note">
+<p class="admonition-title">The whole promise</p>
+<p>One binary, <code>helm install</code>, done — running against your bucket, with no static keys
+in the cluster. The same image runs the local demo and the EKS deployment; only the
+config differs.</p>
+</div>
+<h2 id="build-push-the-image">Build &amp; push the image<a class="headerlink" href="#build-push-the-image" title="Permanent link">&para;</a></h2>
+<p>The multi-stage <code>Dockerfile</code> at the repo root builds the production web UI (<code>web/</code> — Vite +
+SolidJS), compiles <code>vdg --features serve</code> (DataFusion + axum), and ships a slim non-root
+Debian runtime (uid 10001) with the UI baked in.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># from the repo root</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>&lt;registry&gt;/verdigris:0.0.1<span class="w"> </span>.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>docker<span class="w"> </span>push<span class="w"> </span>&lt;registry&gt;/verdigris:0.0.1
+</code></pre></div>
+<h2 id="the-ingest-query-role-split">The ingest / query role split<a class="headerlink" href="#the-ingest-query-role-split" title="Permanent link">&para;</a></h2>
+<p>The binary takes <code>serve --role {all,ingest,query}</code>. For an S3 backend the chart splits the
+write and read surfaces so the query tier scales without ever corrupting writes:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>What it serves</th>
+<th>Replicas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ingest</code></td>
+<td><strong>only</strong> the write endpoints (<code>/v1/ingest</code>, <code>/v1/otlp/logs</code>) — the single manifest writer</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>read/UI endpoints + <code>/config.json</code> + static UI; write endpoints answer <strong>405</strong></td>
+<td><code>replicaCount</code> (scale freely)</td>
+</tr>
+<tr>
+<td><code>all</code></td>
+<td>everything, one process (local demo, or S3 without a dedicated ingest tier)</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>Why the split: multiple writers would race on the JSON manifest. At the data layer this is
+already made safe — data files are content-addressed and the manifest commits via optimistic
+compare-and-swap with retry — so the single-writer <code>ingest</code> role is defense-in-depth, and
+<code>replicaCount</code> scaling the <strong>query</strong> tier is always safe. (Full Apache Iceberg commits, for
+scale/partitioning rather than correctness, remain future work.)</p>
+<h2 id="install-zero-config-local-demo-no-aws">Install: zero-config local demo (no AWS)<a class="headerlink" href="#install-zero-config-local-demo-no-aws" title="Permanent link">&para;</a></h2>
+<p>A filesystem backend on a PVC, auto-seeded with synthetic logs — a queryable UI out of the
+box, useful to smoke-test the chart before wiring S3:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>install<span class="w"> </span>vdg<span class="w"> </span>deploy/helm/verdigris<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--set<span class="w"> </span>image.repository<span class="o">=</span>&lt;registry&gt;/verdigris<span class="w"> </span>--set<span class="w"> </span>image.tag<span class="o">=</span><span class="m">0</span>.0.1
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>svc/vdg-verdigris<span class="w"> </span><span class="m">8080</span>:8080
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># open http://localhost:8080</span>
+</code></pre></div>
+<p>This is always a single <code>--role all</code> pod — a pod's local filesystem isn't shared across
+replicas.</p>
+<h2 id="install-production-on-eks-s3">Install: production on EKS + S3<a class="headerlink" href="#install-production-on-eks-s3" title="Permanent link">&para;</a></h2>
+<p>Point the chart at your bucket and attach an IRSA role. Preferred auth is IRSA, so <strong>no
+static keys</strong> live in the cluster:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>install<span class="w"> </span>vdg<span class="w"> </span>deploy/helm/verdigris<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--set<span class="w"> </span>image.repository<span class="o">=</span>&lt;registry&gt;/verdigris<span class="w"> </span>--set<span class="w"> </span>image.tag<span class="o">=</span><span class="m">0</span>.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--set<span class="w"> </span>storage.backend<span class="o">=</span>s3<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--set<span class="w"> </span>storage.s3.bucket<span class="o">=</span>my-company-logs<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--set<span class="w"> </span>storage.s3.region<span class="o">=</span>us-east-1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--set<span class="w"> </span><span class="nv">replicaCount</span><span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span>--set-string<span class="w"> </span>serviceAccount.annotations.<span class="s2">&quot;eks\.amazonaws\.com/role-arn&quot;</span><span class="o">=</span>arn:aws:iam::&lt;acct&gt;:role/verdigris-s3
+</code></pre></div>
+<p>Credentials resolve through the standard AWS chain (<code>AmazonS3Builder::from_env</code>), so an
+IRSA web-identity "just works" with no keys in the chart.</p>
+<h3 id="iam-permissions">IAM permissions<a class="headerlink" href="#iam-permissions" title="Permanent link">&para;</a></h3>
+<p>The IRSA role needs, on the bucket:</p>
+<ul>
+<li><code>s3:GetObject</code>, <code>s3:PutObject</code>, <code>s3:DeleteObject</code>, <code>s3:ListBucket</code></li>
+</ul>
+<p>If you let the chart auto-apply the lifecycle policy (below), the role also needs
+<code>s3:PutLifecycleConfiguration</code>.</p>
+<h3 id="minio-or-static-keys">MinIO or static keys<a class="headerlink" href="#minio-or-static-keys" title="Permanent link">&para;</a></h3>
+<p>For MinIO or an environment without IRSA, put <code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code>
+in a Secret and reference it (avoid inline plaintext keys):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>--set<span class="w"> </span>storage.s3.endpoint<span class="o">=</span>http://minio:9000<span class="w"> </span>--set<span class="w"> </span>storage.s3.allowHttp<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>--set<span class="w"> </span>storage.s3.existingSecret<span class="o">=</span>verdigris-s3-creds
+</code></pre></div>
+<h2 id="s3-lifecycle-policy-auto-applied">S3 lifecycle policy (auto-applied)<a class="headerlink" href="#s3-lifecycle-policy-auto-applied" title="Permanent link">&para;</a></h2>
+<p>Tiering rules (<code>hot → warm → cold → expire</code>) are an S3-API concern, so the binary owns them.
+<code>object_store</code> has no lifecycle API, so this path uses the AWS SDK behind the optional
+<code>apply</code> feature (already built into the image). On an <strong>s3</strong> install/upgrade the chart runs a
+hook Job that calls <code>vdg lifecycle --table logs --apply</code>, pushing the policy via
+<code>PutBucketLifecycleConfiguration</code> with the pod's IRSA creds — so a fresh install actually
+tiers, with no manual step. The age thresholds come from the <code>lifecycle.*</code> values.</p>
+<p>Disable it (to manage the policy out-of-band) with <code>--set lifecycle.autoApply=false</code>, then
+apply it yourself:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>deploy/vdg-verdigris<span class="w"> </span>--<span class="w"> </span>vdg<span class="w"> </span>lifecycle<span class="w"> </span>--table<span class="w"> </span>logs<span class="w">           </span><span class="c1"># print the policy JSON</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>deploy/vdg-verdigris<span class="w"> </span>--<span class="w"> </span>vdg<span class="w"> </span>lifecycle<span class="w"> </span>--table<span class="w"> </span>logs<span class="w"> </span>--apply<span class="w">   </span><span class="c1"># or apply it directly</span>
+</code></pre></div>
+<h2 id="values-you-actually-set">Values you actually set<a class="headerlink" href="#values-you-actually-set" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>storage.backend</code></td>
+<td><code>local</code></td>
+<td><code>s3</code> for production</td>
+</tr>
+<tr>
+<td><code>storage.s3.bucket</code></td>
+<td><code>""</code></td>
+<td><strong>required</strong> for <code>s3</code></td>
+</tr>
+<tr>
+<td><code>storage.s3.region</code></td>
+<td><code>us-east-1</code></td>
+<td>bucket region</td>
+</tr>
+<tr>
+<td><code>storage.s3.prefix</code></td>
+<td><code>""</code></td>
+<td>optional key prefix within the bucket</td>
+</tr>
+<tr>
+<td><code>storage.s3.endpoint</code> / <code>allowHttp</code></td>
+<td><code>""</code> / <code>false</code></td>
+<td>set for MinIO</td>
+</tr>
+<tr>
+<td><code>replicaCount</code></td>
+<td><code>1</code></td>
+<td>scales the <strong>query</strong> tier (s3 + dedicated ingest)</td>
+</tr>
+<tr>
+<td><code>ingest.dedicated</code></td>
+<td><code>true</code></td>
+<td>separate single-writer ingest Deployment (s3)</td>
+</tr>
+<tr>
+<td><code>serviceAccount.annotations</code></td>
+<td><code>{}</code></td>
+<td>attach the IRSA <code>role-arn</code> here</td>
+</tr>
+<tr>
+<td><code>query.cores</code> / <code>query.modeledMibpsPerCore</code></td>
+<td><code>4</code> / <code>250</code></td>
+<td>the query compute dial</td>
+</tr>
+<tr>
+<td><code>routing.{error,warn,info,debug}</code></td>
+<td>hot/warm/warm/cold</td>
+<td>severity → tier placement</td>
+</tr>
+<tr>
+<td><code>lifecycle.{hotToWarmDays,warmToColdDays,expireDays}</code></td>
+<td><code>3</code> / <code>30</code> / <code>400</code></td>
+<td>age transitions</td>
+</tr>
+<tr>
+<td><code>lifecycle.autoApply</code></td>
+<td><code>true</code></td>
+<td>push the lifecycle policy on install/upgrade (s3)</td>
+</tr>
+<tr>
+<td><code>seed.enabled</code> / <code>seed.records</code></td>
+<td><code>true</code> / <code>20000</code></td>
+<td>one-shot synthetic seed</td>
+</tr>
+<tr>
+<td><code>vector.enabled</code></td>
+<td><code>false</code></td>
+<td>opt-in Vector log-shipping DaemonSet</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ship-real-logs">Ship real logs<a class="headerlink" href="#ship-real-logs" title="Permanent link">&para;</a></h2>
+<p>The chart includes an <strong>opt-in</strong> Vector DaemonSet that tails every pod's stdout/stderr and
+ships NDJSON to the single writer:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>vdg<span class="w"> </span>deploy/helm/verdigris<span class="w"> </span>--reuse-values<span class="w"> </span>--set<span class="w"> </span>vector.enabled<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p>Its sink defaults to the dedicated ingest Service when one exists, so writes always land on
+the single writer, never on the scalable query replicas. See <a href="../sending-logs/">Sending logs</a>
+for Vector, Fluent Bit, and OTLP details.</p>
+<h2 id="health-checks">Health checks<a class="headerlink" href="#health-checks" title="Permanent link">&para;</a></h2>
+<p><code>GET /healthz</code> returns <code>200 {"status":"ok"}</code> in <strong>every</strong> role and is never gated by auth,
+so kubelet probes can target it. The ingest role serves no web root, so point its probes at
+<code>/healthz</code> rather than <code>/</code>.</p>
+<h2 id="validate-the-chart-without-a-cluster">Validate the chart without a cluster<a class="headerlink" href="#validate-the-chart-without-a-cluster" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>helm<span class="w"> </span>lint<span class="w"> </span>deploy/helm/verdigris
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>helm<span class="w"> </span>template<span class="w"> </span>vdg<span class="w"> </span>deploy/helm/verdigris<span class="w">                                          </span><span class="c1"># local backend</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>helm<span class="w"> </span>template<span class="w"> </span>vdg<span class="w"> </span>deploy/helm/verdigris<span class="w"> </span>--set<span class="w"> </span>storage.backend<span class="o">=</span>s3<span class="w"> </span>--set<span class="w"> </span>storage.s3.bucket<span class="o">=</span>x
+</code></pre></div>
+<h2 id="locking-down-the-api">Locking down the API<a class="headerlink" href="#locking-down-the-api" title="Permanent link">&para;</a></h2>
+<p>The <code>/v1/*</code> surface can be gated with an optional bearer token — off by default. See
+<a href="../configuration/#authentication-auth">Configuration → Authentication</a>. Note that the
+live-tail SSE endpoint is consumed by the browser's <code>EventSource</code>, which can't send an
+<code>Authorization</code> header; front it with a query-param token or ingress auth when <code>[auth]</code> is on.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../getting-started/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Quickstart">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Quickstart
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sending-logs/" class="md-footer__link md-footer__link--next" aria-label="Next: Sending logs">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Sending logs
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.tracking", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
